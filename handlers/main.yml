@@ -1,0 +1,4 @@
+---
+# handlers file for ansible-firewalld
+- name: firewalld reload
+  command: firewall-cmd --reload

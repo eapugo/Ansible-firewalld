@@ -1,0 +1,64 @@
+---
+- hosts: localhost
+
+  roles:
+    - role: ansible-firewalld
+  vars:
+    set_name: bots
+    set_name_list: serbianbots
+    fw_services:
+     ssh:
+          state: enabled
+          persist: true
+          zone: public
+     http:
+          state: enabled
+          persist: true
+          zone: public
+    fw_port: 
+        - port: 5060
+          protocol: tcp
+          state: enabled
+        - port: 5060
+          protocol: udp
+          state: enabled
+    fw_ports: 
+     3000:
+          protocol: tcp
+          state: enabled
+     3443:
+          protocol: tcp
+
+    fw_richrule:
+        - source: 192.168.0.0/24
+          service: http
+          log_prefix: "rmtcmd"
+          level: "info"
+          rule: "reject"
+          limit: "1/m"
+
+    direct_dscp:
+        - dscp_class: "CS2"
+          priority: 1
+        - dscp_hex: "0x14"
+          inet: "ipv6"
+          destination: "2001:0558:502a::/40"
+        - dscp_hex: "0x14"
+          inet: ipv6
+        - dscp_class: "AF32"
+
+    direct_rule:
+        - inet: ipv6
+          chain: input
+          priority: 1
+          match_set: serbianbots
+          direction: src
+          target: DROP
+        - match_set: hellokitty
+          chain: output
+          direction: dst
+
+    rich_rules:
+        - rich_rule: 'rule family="ipv4" source address="192.168.2.4" drop'
+          state: enabled
+          permanent: true

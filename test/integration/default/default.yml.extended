@@ -1,0 +1,52 @@
+---
+- hosts: localhost
+
+  roles:
+    - role: ansible-firewalld
+  vars:
+    set_name: bots
+    set_name_list: serbianbots
+    fw_services:
+     ssh:
+          state: enabled
+          persist: true
+          zone: public
+     http:
+          state: enabled
+          persist: true
+          zone: public
+    fw_port: 
+        - port: 5060
+          protocol: tcp
+          state: enabled
+        - port: 5060
+          protocol: udp
+          state: enabled
+    fw_ports: 
+     3000:
+          protocol: tcp
+          state: enabled
+     3443:
+          protocol: tcp
+
+    fw_richrule:
+        - source: 192.168.0.0/24
+          service: http
+          log_prefix: "rmtcmd"
+          level: "info"
+          rule: "reject"
+          limit: "1/m"
+
+    direct_rule:
+        - rule: firewall-cmd --direct --add-rule ipv4 filter INPUT 0 -m set --match-set blacklist src -j DROP 
+          family:
+          route: src
+          port:
+          filter: INPUT
+          ipset: serbianbots
+          rule: DROP
+
+    rich_rules:
+        - rich_rule: 'rule family="ipv4" source ipset="serbianbots" drop'
+          state: enabled
+          permanent: true

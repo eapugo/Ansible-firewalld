@@ -1,0 +1,89 @@
+---
+# tasks file for ansible-firewalld
+- name: Install firewalld
+  yum: name={{ item }} state=latest
+  with_items:
+    - firewalld
+    - ipset
+
+- name: Enable logging
+  lineinfile: dest=/etc/sysconfig/firewalld regexp="^FIRE" line="FIREWALLD_ARGS='--debug'" state=present
+
+- name: start firewalld
+  service: name=firewalld state=started enabled=yes
+
+- name: change firewall default zone
+  command: firewall-cmd --set-default-zone={{ zone_default }}
+
+- name: add interface to default zone
+  command: firewall-cmd --zone={{ zone_default }} --add-interface={{ interface }} --permanent
+  when: interface is defined
+
+- name: create a hash ipset for firewalld usage
+  command: ipset create {{ set_name }} hash:ip -exist
+  when: set_name is defined
+
+- name: import ips into ipset table
+  command: ipset add {{set_name}} {{ item }} -exist
+  with_lines:
+    - cat files/{{ set_name_list }}
+  when: set_name_list is defined
+
+- name: add services
+  firewalld: 
+    service: "{{ item.key }}"
+    permanent: "{{ item.value.persist if item.value.persist is defined else 'true' }}"
+    state: "{{ item.state if item.state is defined else 'enabled' }}"
+    zone: "{{ item.value.zone if item.value.zone is defined else zone_default }}"
+  with_dict: "{{ fw_services | default({}) }}"
+  notify: firewalld reload
+
+- name: add custom port
+  firewalld: 
+    port: "{{ item.key }}/{{ item.value.protocol }}"
+    permanent: "{{ item.value.persist if item.value.persist is defined else 'true' }}"
+    state: "{{ item.state if item.state is defined else 'enabled' }}"
+    zone: "{{ item.value.zone if item.value.zone is defined else zone_default }}"
+  with_dict: "{{ fw_ports | default({}) }}"
+  notify: firewalld reload
+
+#update to adjust for duplicate ports
+- name: add duplicate port with different protocol
+  firewalld: 
+    port: "{{ item.port }}/{{ item.protocol }}"
+    permanent: "{{ item.persist if item.persist is defined else 'true' }}"
+    state: "{{ item.state if item.state is defined else 'enabled' }}"
+    zone: "{{ item.zone if item.zone is defined else zone_default }}"
+  with_items: "{{ fw_port | default({}) }}"
+  notify: firewalld reload
+
+- name: add rich_rules
+  firewalld: 
+    rich_rule: 'rule {% if item.source is defined %} family={{item.family | default("ipv4") }} source address={{ item.source }} {% endif %} service name="{{ item.service }}" {% if item.log_prefix is defined %} log prefix="{{ item.log_prefix }}" level="{{ item.level}}" limit value="{{item.limit | default("4/m") }}"{% endif %} {{item.rule}} '
+    permanent: "{{ item.persist if item.persist is defined else 'true' }}"
+    state: "{{ item.state if item.state is defined else 'enabled' }}"
+  with_items: "{{ fw_richrule | default({}) }}"
+  notify: firewalld reload
+
+- name: add fancy rich_rules
+  firewalld: 
+    rich_rule: "{{item.rich_rule}}" 
+    permanent: "{{ item.persist if item.persist is defined else 'true' }}"
+    state: "{{ item.state if item.state is defined else 'enabled' }}"
+  with_items: "{{ rich_rules | default({}) }}"
+  notify: firewalld reload
+
+- name: add direct DSCP Markings
+  command: |
+   firewall-cmd --permanent --direct --add-rule {{item.inet | default("ipv4") }} mangle {{ item.chain | default("OUTPUT") }} {{ item.priority | default("0") }} -j {{ item.target | default("DSCP") }} {% if item.dscp_hex is defined %} --set-dscp {{ item.dscp_hex }} {% else %} --set-dscp-class {{ item.dscp_class }}  {% endif %} {% if item.destination is defined %} -d {{ item.destination }} {% endif %}
+  with_items: "{{ direct_dscp | default({}) }}"
+  notify: firewalld reload
+
+- name: add direct iptable rule with created ipset group
+  command: |
+   firewall-cmd --permanent --direct --add-rule {{ item.inet | default("ipv4") }} filter {{ item.chain.upper() | default("INPUT") }} {{ item.priority | default("0") }} -m set --match-set {{ item.match_set }} {{item.direction}} -j {{ item.target | default("drop") }}
+  with_items: "{{ direct_rule | default({}) }}"
+  notify: firewalld reload
+
+- name: firewalld reload
+  command: firewall-cmd --reload
