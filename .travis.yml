@@ -1,0 +1,14 @@
+---
+language: python
+python: "2.7"
+
+before_install:
+  - sudo yum -y update
+
+install:
+   - pip install ansible
+   - "printf '[defaults]\nroles_path = ../' > ansible.cfg"
+
+script:
+ - ansible-playbook -i test/integration/default/inventory test/integration/default/default.yml --syntax-check
+ - ansible-playbook -i test/integration/default/inventory test/integration/default/default.yml --connection=local
