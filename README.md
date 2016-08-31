@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/eapugo/Ansible-firewalld.svg?branch=master)](https://travis-ci.org/eapugo/Ansible-firewalld)
+
 Ansible-Firewalld
 =========
 supports firewalld 0.4.0 and backward compatible for old ipset direct configuration

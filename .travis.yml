@@ -1,14 +1,24 @@
 ---
-language: python
-python: "2.7"
+language: ruby
+sudo: required
+
+services:
+  - docker
 
 before_install:
-  - sudo yum -y update
+  - sudo docker pull centos:7
+  - sudo docket build -t fwdroletr github.com/eapugo/docker-centos7-travis 
 
-install:
-   - pip install ansible
-   - "printf '[defaults]\nroles_path = ../' > ansible.cfg"
 
 script:
- - ansible-playbook -i test/integration/default/inventory test/integration/default/default.yml --syntax-check
- - ansible-playbook -i test/integration/default/inventory test/integration/default/default.yml --connection=local
+
+script:
+  - sudo docker run --detach --volume="${PWD}":/etc/ansible/roles/role_under_test:ro --privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro fwdroletr /usr/lib/systemd/systemd > /tmp/container_id
+  # syntax check
+  - sudo docker exec "$(cat /tmp/container_id)" ansible-playbook /etc/ansible/roles/role_under_test/test/integration/default/default.yml --syntax-check
+  # Run ansible playbook
+  - sudo docker exec "$(cat /tmp/container_id)" ansible-playbook /etc/ansible/roles/role_under_test/test/integration/default/default.yml
+  - sudo bundle exec rspec /etc/ansible/roles/role_under_test/test/integration/default/serverspec/
+  # Clean up
+  - sudo docker stop "$(cat /tmp/container_id)"
+
