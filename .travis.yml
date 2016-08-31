@@ -7,7 +7,7 @@ services:
 
 before_install:
   - sudo docker pull centos:7
-  - sudo docket build -t fwdroletr github.com/eapugo/docker-centos7-travis 
+  - sudo docker build -t fwdroletr github.com/eapugo/docker-centos7-travis 
 
 
 script:
