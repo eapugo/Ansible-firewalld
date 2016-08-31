@@ -13,12 +13,12 @@ before_install:
 script:
 
 script:
-  - sudo docker run --detach --volume="${PWD}":/etc/ansible/roles/role_under_test:ro --privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro fwdroletr /usr/lib/systemd/systemd > /tmp/container_id
+  - sudo docker run --detach --volume="${PWD}":/etc/ansible/roles/Ansible-firewalld:ro --privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro fwdroletr /usr/lib/systemd/systemd > /tmp/container_id
   # syntax check
-  - sudo docker exec "$(cat /tmp/container_id)" ansible-playbook /etc/ansible/roles/role_under_test/test/integration/default/default.yml --syntax-check
+  - sudo docker exec "$(cat /tmp/container_id)" ansible-playbook /etc/ansible/roles/Ansible-firewalld/test/integration/default/default.yml --syntax-check
   # Run ansible playbook
-  - sudo docker exec "$(cat /tmp/container_id)" ansible-playbook /etc/ansible/roles/role_under_test/test/integration/default/default.yml
-  - sudo bundle exec rspec /etc/ansible/roles/role_under_test/test/integration/default/serverspec/
+  - sudo docker exec "$(cat /tmp/container_id)" ansible-playbook /etc/ansible/roles/Ansible-firewalld/test/integration/default/default.yml
+  - sudo docker exec "$(cat /tmp/container_id)" bundle exec rspec /etc/ansible/roles/Ansible-firewalld/test/integration/default/serverspec/
   # Clean up
   - sudo docker stop "$(cat /tmp/container_id)"
 
