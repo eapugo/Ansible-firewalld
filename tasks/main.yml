@@ -26,7 +26,7 @@
 - name: import ips into ipset table
   command: ipset add {{set_name}} {{ item }} -exist
   with_lines:
-    - cat files/{{ set_name_list }}
+    - cat "{{ set_name_list }}"
   when: set_name_list is defined
 
 - name: add services
