@@ -81,7 +81,12 @@ Flags for permanent can be added with the 'persist' flag if not included it is p
 To define a rich rule, use the 'rule' flag fw\_richrule for preset service rules and rich\_rules for custom rules . additional tips here [rich_rules](https://fedoraproject.org/wiki/Features/FirewalldRichLanguage)
 
 
-To include an ipset or a file with a list of **ips** this can also be used to create a mangle for DSCP markings.
+To include an ipset, add a file with a list of **ips**
+which can be import into the ipset
+
+
+ this can also be used to create a mangle for DSCP markings.
+
 ####dscp addon 
 defaults are inet:ipv4,priority:0,chain:Output,target:DSCP; only requires "dscp\_hex or dscp\_class" to be defined. 
 dscp_hex will take integers or hex
