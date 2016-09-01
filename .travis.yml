@@ -18,7 +18,7 @@ script:
   - sudo docker exec "$(cat /tmp/container_id)" ansible-playbook /etc/ansible/roles/Ansible-firewalld/test/integration/default/default.yml --syntax-check
   # Run ansible playbook
   - sudo docker exec "$(cat /tmp/container_id)" ansible-playbook /etc/ansible/roles/Ansible-firewalld/test/integration/default/default.yml
-  - sudo docker exec "$(cat /tmp/container_id)" bundle exec rspec /etc/ansible/roles/Ansible-firewalld/test/integration/default/serverspec/
+  - travis_retry bundle exec rspec /etc/ansible/roles/Ansible-firewalld/test/integration/default/serverspec/
   # Clean up
   - sudo docker stop "$(cat /tmp/container_id)"
 
