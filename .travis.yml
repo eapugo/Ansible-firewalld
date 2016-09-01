@@ -18,7 +18,9 @@ script:
   - sudo docker exec "$(cat /tmp/container_id)" ansible-playbook /etc/ansible/roles/Ansible-firewalld/test/integration/default/default.yml --syntax-check
   # Run ansible playbook
   - sudo docker exec "$(cat /tmp/container_id)" ansible-playbook /etc/ansible/roles/Ansible-firewalld/test/integration/default/default.yml
-  - docker exec "$(cat /tmp/container_id)" bundle exec rspec 
+  - RUN sudo gem install bundle --no-ri --no-rdoc
+  -RUN sudo gem install serverspec -v '1.10.0' --no-ri --no-rdoc
+  - docker exec "$(cat /tmp/container_id)" bundle exec rspec /etc/ansible/roles/Ansible-firewalld/test/integration/default/serverspec/firewalld_spec.rb
   # Clean up
   - sudo docker stop "$(cat /tmp/container_id)"
 
